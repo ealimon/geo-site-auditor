@@ -11,7 +11,7 @@ else:
     st.error("Missing Gemini API Key. Please add it to Streamlit Secrets.")
 
 def get_ai_audit(website_text):
-    model = gemini-flash-latest
+    model = genai.GenerativeModel('gemini-flash-latest')
     prompt = f"""
     Act as a SEO expert specialized in AI Overviews (GEO). 
     Analyze the following website content and provide:
