@@ -2,48 +2,48 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-# --- 1. SET UP THE USER INTERFACE ---
-st.set_page_config(page_title="Limon Media GEO Auditor", page_icon="🚀")
-st.title("🌐 AI Overview (GEO) Auditor")
-st.subheader("Optimize your site for the AI Search Era")
+# --- 1. CONFIGURATION (Replace these with your actual IDs) ---
+# You get these from your Lemon Squeezy Dashboard
+LEMON_SQUEEZY_API_URL = "https://api.lemonsqueezy.com/v1/licenses/validate"
 
-# --- 2. INPUT AREA ---
-url = st.text_input("Enter your website URL (e.g., https://example.com):")
-analyze_button = st.button("Run AI Audit")
-
-if analyze_button and url:
+# --- 2. LICENSE CHECK FUNCTION ---
+def is_license_valid(key):
     try:
-        # --- 3. SCRAPE THE WEBSITE ---
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text_content = soup.get_text()
-        
-        st.write("---")
-        st.success(f"Successfully scanned: {url}")
+        # We send a request to Lemon Squeezy to check the key
+        response = requests.post(
+            LEMON_SQUEEZY_API_URL,
+            data={"license_key": key},
+            headers={"Accept": "application/json"}
+        )
+        data = response.json()
+        return data.get("valid", False)
+    except:
+        return False
 
-        # --- 4. THE AUDIT LOGIC ---
-        col1, col2 = st.columns(2)
-        
-        # Check for 'Atomic Answer' (Short paragraphs near headers)
-        headers = soup.find_all(['h1', 'h2'])
-        has_atomic = any(len(h.find_next('p').text.split()) < 60 for h in headers if h.find_next('p'))
-        
-        # Check for Schema Markup
-        has_schema = "application/ld+json" in response.text
+# --- 3. THE LOCK SCREEN ---
+st.set_page_config(page_title="Limon Media GEO Auditor", page_icon="🚀")
 
-        # --- 5. DISPLAY RESULTS ---
-        with col1:
-            st.metric(label="GEO Readiness Score", value="75%" if has_atomic else "40%")
-            
-        with col2:
-            st.write("**Quick Checks:**")
-            st.write("✅ Schema Detected" if has_schema else "❌ No Schema Found")
-            st.write("✅ Atomic Answer Found" if has_atomic else "❌ Needs 'TL;DR' Summary")
+# Check if the user is already "Logged In" for this session
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
 
-        st.info("**Strategy Suggestion:** Add a 50-word summary directly under your main H2 heading to increase your chances of appearing in AI Overviews.")
+if not st.session_state["authenticated"]:
+    st.title("🔐 Pro Tool Locked")
+    st.write("Please enter your license key from the **Limon Media Store** to continue.")
+    
+    user_key = st.text_input("License Key", type="password")
+    if st.button("Unlock Tool"):
+        if is_license_valid(user_key):
+            st.session_state["authenticated"] = True
+            st.success("License Activated!")
+            st.rerun()
+        else:
+            st.error("Invalid License Key. Please check your email or store account.")
+    
+    st.info("Don't have a key? [Get one here at the Limon Media Store](https://yourstorelink.com)")
+    st.stop() # This stops the rest of the code from running
 
-    except Exception as e:
-        st.error(f"Could not scan site. Please check the URL. Error: {e}")
-
-st.sidebar.markdown("---")
-st.sidebar.write("Powered by **Limon Media**")
+# --- 4. THE ACTUAL TOOL (Only runs if authenticated) ---
+st.title("🌐 AI Overview (GEO) Auditor")
+# ... (The rest of your existing audit code goes here) ...
+st.sidebar.button("Log Out", on_click=lambda: st.session_state.update({"authenticated": False}))
