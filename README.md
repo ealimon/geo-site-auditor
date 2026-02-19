@@ -9,4 +9,4 @@ AI Overviews (Google, Gemini, Perplexity).
 
 ### 💰 Commercial Use
 This tool is part of the Limon Media Store. For a professional license 
-and bulk auditing features, please visit [Your Website Link].
+and bulk auditing features, please visit www.Limon.Media.
