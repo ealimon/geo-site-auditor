@@ -46,4 +46,4 @@ if analyze_button and url:
         st.error(f"Could not scan site. Please check the URL. Error: {e}")
 
 st.sidebar.markdown("---")
-st.sidebar.write("Powered by **Limon Media Store**")
+st.sidebar.write("Powered by **Limon Media**")
