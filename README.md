@@ -1,44 +1,25 @@
-🍋 Limon AI: GEO Site Auditor
-An AI-powered SEO tool designed to audit websites for Generative Engine Optimization (GEO). This tool analyzes how well a site is positioned to be cited by AI search engines like Google Gemini, Perplexity, and ChatGPT.
+# 🍋 Limon AI: GEO Site Auditor
 
-🚀 Features
-AI-Powered Analysis: Uses Google Gemini 1.5 Flash to identify content gaps.
+An AI-powered tool designed to audit websites for **Generative Engine Optimization (GEO)**. This application analyzes how effectively a website's content can be cited and surfaced by AI search engines like Google Gemini, Perplexity, and SearchGPT.
 
-Credit System: Integrated with Lemon Squeezy to provide 10 audits per license key.
+## 🚀 Features
+- **AI Audit Engine:** Powered by Google Gemini 1.5 Flash for deep content analysis.
+- **GEO Readiness Score:** Provides a 1-100 visibility metric.
+- **Credit System:** Integrated with **Lemon Squeezy** to provide a 10-audit limit per license key.
+- **Actionable Insights:** Identifies specific content gaps to improve AI search ranking.
 
-Atomic Answers: Generates LLM-optimized summaries for better AI visibility.
+---
 
-🛠️ Setup & Installation
-1. Environment Variables (Secrets)
-To run this app, you must add the following keys to your Streamlit Cloud Secrets or a local .env file:
+## 🛠️ Setup & Installation
 
-GOOGLE_API_KEY: Your API key from Google AI Studio.
+### 1. Prerequisites
+- Python 3.10 or higher
+- A [Google AI Studio](https://aistudio.google.com/) API Key
+- A [Lemon Squeezy](https://www.lemonsqueezy.com/) API Key
 
-LEMON_API_KEY: Your API key from the Lemon Squeezy Settings dashboard.
+### 2. Configuration (Secrets)
+To keep your API keys safe, this app uses Streamlit's secrets management. **Do not hard-code your keys into the script.** Add the following to your **Streamlit Cloud Secrets** or a local `.streamlit/secrets.toml` file:
 
-2. Local Deployment
-Bash
-# Clone the repository
-git clone https://github.com/your-username/your-repo-name.git
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run app.py
-💳 Payment Integration
-This app is configured to work with Lemon Squeezy.
-
-Users purchase a "10-Audit Pack" on your storefront.
-
-The app validates the license key via the /licenses/validate endpoint.
-
-Each successful audit triggers an /licenses/activate call to decrement one credit.
-
-⚠️ Troubleshooting
-KeyError: Ensure your Secrets are correctly named in the Streamlit Dashboard.
-
-Invalid License: Check that the product in Lemon Squeezy has License Keys enabled and the Activation Limit is set to 10.
-
-A Quick "Clean House" Tip
-Before you push this to GitHub, make sure you delete any old Gumroad-related files or test scripts. Keeping your repository clean makes it much easier for Streamlit to deploy without errors.
+```toml
+GOOGLE_API_KEY = "your_google_api_key_here"
+LEMON_API_KEY = "your_lemon_squeezy_api_key_here"
