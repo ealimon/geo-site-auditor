@@ -36,10 +36,11 @@ def run_amazing_audit(url, niche):
         soup = BeautifulSoup(response.text, 'html.parser')
         page_text = soup.get_text()[:4000] 
 
+        # Pulls from Streamlit Secrets vault
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # FIXED: Explicit path to solve 404 errors
+        # FIXED: Using explicit path to resolve 404 errors
         model = genai.GenerativeModel('models/gemini-1.5-flash')
 
         prompt = f"""
@@ -94,7 +95,6 @@ if st.button("Generate Professional AI Audit & Implementation Plan"):
                 c3.metric("Status", "Optimized")
 
                 st.divider()
-
                 st.subheader("AI Search Strategy")
                 st.markdown(f'<div class="strategy-box">{data["ai_strategy"]}</div>', unsafe_allow_html=True)
 
