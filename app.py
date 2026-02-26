@@ -6,9 +6,8 @@ import json
 import re
 import google.generativeai as genai
 
-# --- HELPER: STRIP EMOJIS FOR PDF COMPATIBILITY ---
+# --- HELPER: STRIP EMOJIS FOR PDF ---
 def clean_text(text):
-    # Removes non-ASCII characters that cause FPDF to crash
     return re.sub(r'[^\x00-\x7F]+', '', text)
 
 # --- PDF REPORT GENERATOR ---
@@ -33,21 +32,18 @@ class GEO_Report(FPDF):
 # --- THE LIVE AI BRIDGE ---
 def run_amazing_audit(url, niche):
     try:
-        # 1. Scrape the live site data
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
-        page_text = soup.get_text()[:4000] # Analyze first 4000 chars
+        page_text = soup.get_text()[:4000] 
 
-        # 2. Connect to Secrets
+        # Pulls from Streamlit Secrets vault
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
 
-        # 3. Request Expert GEO Analysis
         prompt = f"""
         Act as a GEO (Generative Engine Optimization) expert. 
         Analyze this content for the niche '{niche}': {page_text}
-        
         Provide:
         1. A 'Deep Content Diagnostic' for AI citation.
         2. A 'Market Benchmark' against competitors.
@@ -58,9 +54,8 @@ def run_amazing_audit(url, niche):
         ai_text = ai_response.text
 
         return {
-            "score": 92, # Dynamic score based on audit
-            "ai_strategy": ai_text,
-            "market_benchmark": "Analysis completed via Gemini 1.5 Pro Bridge."
+            "score": 92,
+            "ai_strategy": ai_text
         }
     except Exception as e:
         return {"error": f"Connection Error: {str(e)}"}
@@ -68,7 +63,6 @@ def run_amazing_audit(url, niche):
 # --- UI SETUP ---
 st.set_page_config(page_title="Limon AI | GEO PRO", layout="wide")
 
-# Custom CSS for Agency Branding
 st.markdown("""
     <style>
     .stButton>button { 
@@ -83,7 +77,6 @@ st.markdown("""
 st.title("🍋 Limon Media: GEO Auditor PRO")
 st.sidebar.info("🚀 PRO License: 150 Audits Remaining")
 
-# --- INPUT SECTION ---
 col_a, col_b = st.columns([2, 1])
 with col_a:
     url_input = st.text_input("Website URL", placeholder="https://limon.media")
@@ -101,17 +94,14 @@ if st.button("Generate Professional AI Audit & Implementation Plan"):
             if "error" in data:
                 st.error(data["error"])
             else:
-                # 1. Metrics Dashboard with Tooltips
                 c1, c2, c3 = st.columns(3)
-                c1.metric("GEO Readiness", f"{data['score']}/100", help="Measures how easily AI models can parse and cite your content.")
-                c2.metric("Entity Density", "High", help="Analysis of keyword-to-concept relationships for AI understanding.")
-                c3.metric("Status", "Optimized", help="Overall health of your technical Schema and AI visibility.")
+                c1.metric("GEO Readiness", f"{data['score']}/100", help="Measures how easily AI models can parse your content.")
+                c2.metric("Entity Density", "High", help="Analysis of keyword-to-concept relationships.")
+                c3.metric("Status", "Optimized", help="Overall health of technical Schema.")
 
                 st.divider()
 
-                # 2. Results Tabs
                 t1, t2 = st.tabs(["🚀 Strategic Content", "💻 Implementation Code"])
-                
                 with t1:
                     st.subheader("AI Search Strategy")
                     st.markdown(f'<div class="strategy-box">{data["ai_strategy"]}</div>', unsafe_allow_html=True)
@@ -120,7 +110,6 @@ if st.button("Generate Professional AI Audit & Implementation Plan"):
                     st.subheader("Ready-to-Paste JSON-LD Schema")
                     st.info("The AI-generated schema code is included in your full PDF report.")
 
-                # 3. PDF Export
                 pdf = GEO_Report()
                 pdf.add_page()
                 pdf.section_header(f"GEO Strategy Report: {url_input}")
