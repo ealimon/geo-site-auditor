@@ -40,7 +40,7 @@ def run_amazing_audit(url, niche):
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # FIXED: Using the full model path to avoid 404 errors
+        # FIXED: Using the full model path to avoid 404 versioning errors
         model = genai.GenerativeModel('models/gemini-1.5-flash')
 
         prompt = f"""
@@ -77,7 +77,6 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🍋 Limon Media: GEO Auditor PRO")
-# Updated sidebar to reflect your 150-audit agency positioning
 st.sidebar.info("🚀 PRO License: 150 Audits Remaining")
 
 col_a, col_b = st.columns([2, 1])
