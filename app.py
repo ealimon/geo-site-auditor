@@ -27,19 +27,13 @@ class GEO_Report(FPDF):
 # --- CORE AUDIT FUNCTIONS ---
 def run_geo_audit(url):
     try:
-        # Basic scraping for technical signals
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 1. Schema Check
         schema = soup.find_all('script', type='application/ld+json')
         has_schema = len(schema) > 0
-        
-        # 2. Image Audit
         images = soup.find_all('img')
         missing_alt = [img.get('src') for img in images if not img.get('alt')]
         
-        # 3. Content Analysis (Mocked for Demo purposes)
         results = {
             "score": 88 if has_schema else 62,
             "schema_detected": has_schema,
@@ -54,83 +48,50 @@ def run_geo_audit(url):
 # --- STREAMLIT UI SETUP ---
 st.set_page_config(page_title="Limon AI | GEO PRO Auditor", layout="wide")
 
-# Custom CSS for a "Pro" look - Fixed the unsafe_allow_html error here
 st.markdown("""
     <style>
     .main { background-color: #f9f9f9; }
     .stButton>button { 
-        width: 100%; 
-        border-radius: 5px; 
-        height: 3em; 
-        background-color: #FFD700; 
-        color: black; 
-        font-weight: bold; 
+        width: 100%; border-radius: 5px; height: 3em; 
+        background-color: #FFD700; color: black; font-weight: bold; 
     }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍋 Limon Media: GEO Auditor PRO")
-st.write("Professional AI-Search Optimization & Technical Audit Tool")
 
-# --- LICENSE CHECK (BYPASSED FOR DEMO RECORDING) ---
-st.sidebar.warning("🛠️ DEMO MODE ACTIVE: License check bypassed for recording.")
+# --- DEMO MODE BYPASS ---
+st.sidebar.warning("🛠️ DEMO MODE ACTIVE")
 demo_is_active = True 
 
 if demo_is_active:
-    target_url = st.text_input("Enter Website URL (include https://)", placeholder="https://www.yourclient.com")
+    target_url = st.text_input("Enter Website URL", placeholder="https://www.example.com")
     
     if st.button("Generate Professional Audit"):
         if target_url:
-            with st.spinner("Analyzing Site Architecture & AI Readability..."):
+            with st.spinner("Analyzing Site..."):
                 data = run_geo_audit(target_url)
-                
                 if "error" in data:
-                    st.error(f"Error connecting to site: {data['error']}")
+                    st.error(f"Error: {data['error']}")
                 else:
-                    # Metrics Row
                     col1, col2, col3 = st.columns(3)
-                    col1.metric("GEO Readiness", f"{data['score']}/100")
-                    col2.metric("Schema Status", "FOUND" if data['schema_detected'] else "MISSING")
-                    col3.metric("Image Issues", data['missing_alt_count'])
+                    col1.metric("GEO Score", f"{data['score']}/100")
+                    col2.metric("Schema", "OK" if data['schema_detected'] else "MISSING")
+                    col3.metric("Alt Tags", data['missing_alt_count'])
                     
-                    st.divider()
-                    
-                    # Detailed Analysis Layout
-                    tab1, tab2 = st.tabs(["Content Gaps", "Technical Fixes"])
-                    with tab1:
-                        st.write("### AI Semantic Analysis")
-                        st.info(data['content_gap'])
-                        st.write("**Strategy:** Optimize for LLM 'citations' by providing clear, factual definitions of your services.")
-                    
-                    with tab2:
-                        st.write("### Technical Steps for Designers")
-                        st.write(f"- **Schema Markup:** { 'JSON-LD Verified' if data['schema_detected'] else '❌ ACTION REQUIRED: Implement LocalBusiness JSON-LD Schema.'}")
-                        st.write(f"- **Image Assets:** { 'All images optimized' if data['missing_alt_count'] == 0 else f'❌ ACTION REQUIRED: Fix {data['missing_alt_count']} images missing Alt-text.'}")
+                    st.info(f"**AI Analysis:** {data['content_gap']}")
 
-                    # PDF Generation Logic
+                    # PDF Logic Fixed for fpdf2
                     pdf = GEO_Report()
                     pdf.add_page()
-                    pdf.chapter_title(f"Audit Results for {target_url}")
-                    pdf.chapter_body(f"Overall Score: {data['score']}/100")
-                    pdf.chapter_title("Content Optimization Gaps")
-                    pdf.chapter_body(data['content_gap'])
-                    pdf.chapter_title("Technical Recommendations")
-                    pdf.chapter_body(data['recommendation'])
+                    pdf.chapter_title(f"Audit for {target_url}")
+                    pdf.chapter_body(f"Score: {data['score']}/100\n{data['content_gap']}")
                     
-                    # Using 'latin-1' encoding for FPDF compatibility
-                    pdf_output = pdf.output(dest='S').encode('latin-1')
+                    pdf_bytes = pdf.output()
 
                     st.download_button(
                         label="📥 Download White-Label PDF Report",
-                        data=pdf_output,
-                        file_name="Limon_Media_Pro_Audit.pdf",
+                        data=bytes(pdf_bytes),
+                        file_name="Limon_Pro_Audit.pdf",
                         mime="application/pdf"
                     )
-        else:
-            st.error("Please enter a valid URL to begin.")
-
-else:
-    # This block is hidden during Demo Mode
-    license_key = st.sidebar.text_input("Enter PRO License Key")
-    if not license_key:
-        st.info("Please enter your PRO License Key in the sidebar to access this tool.")
