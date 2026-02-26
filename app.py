@@ -27,6 +27,7 @@ class GEO_Report(FPDF):
 # --- CORE AUDIT FUNCTIONS ---
 def run_geo_audit(url):
     try:
+        # Basic scraping for technical signals
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -38,7 +39,7 @@ def run_geo_audit(url):
         images = soup.find_all('img')
         missing_alt = [img.get('src') for img in images if not img.get('alt')]
         
-        # 3. Content Analysis (Mocked for Demo - usually uses Gemini API)
+        # 3. Content Analysis (Mocked for Demo purposes)
         results = {
             "score": 88 if has_schema else 62,
             "schema_detected": has_schema,
@@ -53,19 +54,25 @@ def run_geo_audit(url):
 # --- STREAMLIT UI SETUP ---
 st.set_page_config(page_title="Limon AI | GEO PRO Auditor", layout="wide")
 
-# Custom CSS for a "Pro" look
+# Custom CSS for a "Pro" look - Fixed the unsafe_allow_html error here
 st.markdown("""
     <style>
     .main { background-color: #f9f9f9; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #FFD700; color: black; font-weight: bold; }
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 5px; 
+        height: 3em; 
+        background-color: #FFD700; 
+        color: black; 
+        font-weight: bold; 
+    }
     </style>
-    """, unsafe_content_type=True)
+    """, unsafe_allow_html=True)
 
 st.title("🍋 Limon Media: GEO Auditor PRO")
 st.write("Professional AI-Search Optimization & Technical Audit Tool")
 
-# --- LICENSE CHECK (BYPASSED FOR DEMO) ---
-# In production, you would use: license_key = st.sidebar.text_input("License Key")
+# --- LICENSE CHECK (BYPASSED FOR DEMO RECORDING) ---
 st.sidebar.warning("🛠️ DEMO MODE ACTIVE: License check bypassed for recording.")
 demo_is_active = True 
 
@@ -78,7 +85,7 @@ if demo_is_active:
                 data = run_geo_audit(target_url)
                 
                 if "error" in data:
-                    st.error(f"Error: {data['error']}")
+                    st.error(f"Error connecting to site: {data['error']}")
                 else:
                     # Metrics Row
                     col1, col2, col3 = st.columns(3)
@@ -88,15 +95,17 @@ if demo_is_active:
                     
                     st.divider()
                     
-                    # Detailed Analysis
+                    # Detailed Analysis Layout
                     tab1, tab2 = st.tabs(["Content Gaps", "Technical Fixes"])
                     with tab1:
                         st.write("### AI Semantic Analysis")
                         st.info(data['content_gap'])
+                        st.write("**Strategy:** Optimize for LLM 'citations' by providing clear, factual definitions of your services.")
+                    
                     with tab2:
-                        st.write("### Technical Steps")
-                        st.write(f"- **Schema:** { 'JSON-LD Verified' if data['schema_detected'] else 'ACTION REQUIRED: Implement LocalBusiness Schema'}")
-                        st.write(f"- **Images:** { 'All images optimized' if data['missing_alt_count'] == 0 else f'ACTION REQUIRED: Fix {data[2]} missing Alt-tags'}")
+                        st.write("### Technical Steps for Designers")
+                        st.write(f"- **Schema Markup:** { 'JSON-LD Verified' if data['schema_detected'] else '❌ ACTION REQUIRED: Implement LocalBusiness JSON-LD Schema.'}")
+                        st.write(f"- **Image Assets:** { 'All images optimized' if data['missing_alt_count'] == 0 else f'❌ ACTION REQUIRED: Fix {data['missing_alt_count']} images missing Alt-text.'}")
 
                     # PDF Generation Logic
                     pdf = GEO_Report()
@@ -108,6 +117,7 @@ if demo_is_active:
                     pdf.chapter_title("Technical Recommendations")
                     pdf.chapter_body(data['recommendation'])
                     
+                    # Using 'latin-1' encoding for FPDF compatibility
                     pdf_output = pdf.output(dest='S').encode('latin-1')
 
                     st.download_button(
@@ -120,4 +130,7 @@ if demo_is_active:
             st.error("Please enter a valid URL to begin.")
 
 else:
-    st.info("Please enter your PRO License Key in the sidebar to access this tool.")
+    # This block is hidden during Demo Mode
+    license_key = st.sidebar.text_input("Enter PRO License Key")
+    if not license_key:
+        st.info("Please enter your PRO License Key in the sidebar to access this tool.")
