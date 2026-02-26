@@ -1,25 +1,23 @@
-# 🍋 Limon AI: GEO Site Auditor
+🍋 Limon Media: GEO Auditor PRO
+GEO Auditor PRO is an agency-grade technical SEO tool designed for the Generative AI era. While traditional SEO focuses on blue links, this tool optimizes your site to be cited by Google AI Overviews (SGE), Gemini, and Perplexity.
 
-An AI-powered tool designed to audit websites for **Generative Engine Optimization (GEO)**. This application analyzes how effectively a website's content can be cited and surfaced by AI search engines like Google Gemini, Perplexity, and SearchGPT.
+🚀 Key Features
+Live AI Content Diagnostic: Connects directly to the Gemini 1.5 Pro engine to analyze your site's "Entity Density" and semantic clarity.
 
-## 🚀 Features
-- **AI Audit Engine:** Powered by Google Gemini 1.5 Flash for deep content analysis.
-- **GEO Readiness Score:** Provides a 1-100 visibility metric.
-- **Credit System:** Integrated with **Lemon Squeezy** to provide a 10-audit limit per license key.
-- **Actionable Insights:** Identifies specific content gaps to improve AI search ranking.
+150-Audit Agency License: A generous capacity designed for consultants and agencies managing multiple high-value client sites.
 
----
+Automated JSON-LD Generation: Instantly creates the specific Schema markup needed to help LLMs categorize and trust your brand.
 
-## 🛠️ Setup & Installation
+White-Label PDF Reports: Generate professional, client-ready strategy blueprints in seconds to justify your GEO service fees.
 
-### 1. Prerequisites
-- Python 3.10 or higher
-- A [Google AI Studio](https://aistudio.google.com/) API Key
-- A [Lemon Squeezy](https://www.lemonsqueezy.com/) API Key
+📋 How It Works
+Authentication: Users enter their $99 PRO License Key provided in their Welcome Guide.
 
-### 2. Configuration (Secrets)
-To keep your API keys safe, this app uses Streamlit's secrets management. **Do not hard-code your keys into the script.** Add the following to your **Streamlit Cloud Secrets** or a local `.streamlit/secrets.toml` file:
+Scraping: The app fetches the live architectural data of the target URL.
 
-```toml
-GOOGLE_API_KEY = "your_google_api_key_here"
-LEMON_API_KEY = "your_lemon_squeezy_api_key_here"
+AI Analysis: Gemini 1.5 Pro performs a deep audit based on current GEO (Generative Engine Optimization) benchmarks.
+
+Reporting: The user receives a real-time dashboard and a downloadable PDF strategy.
+
+📄 Support
+For technical issues or strategic GEO questions, please contact our team at info@Limon.Media.
