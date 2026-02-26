@@ -40,8 +40,8 @@ def run_amazing_audit(url, niche):
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # FIXED: Using 'gemini-1.5-flash-latest' for maximum API stability
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # FIXED: Using the full model path to avoid 404 errors
+        model = genai.GenerativeModel('models/gemini-1.5-flash')
 
         prompt = f"""
         Act as a GEO (Generative Engine Optimization) expert. 
@@ -77,6 +77,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🍋 Limon Media: GEO Auditor PRO")
+# Updated sidebar to reflect your 150-audit agency positioning
 st.sidebar.info("🚀 PRO License: 150 Audits Remaining")
 
 col_a, col_b = st.columns([2, 1])
@@ -124,3 +125,5 @@ if st.button("Generate Professional AI Audit & Implementation Plan"):
                     file_name="Limon_Pro_Strategy.pdf",
                     mime="application/pdf"
                 )
+    else:
+        st.warning("Please provide a URL and Niche.")
