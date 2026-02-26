@@ -4,12 +4,12 @@ from bs4 import BeautifulSoup
 from fpdf import FPDF
 import json
 
-# --- PDF REPORT GENERATOR (High-End Formatting) ---
+# --- PDF REPORT GENERATOR (Agency-Grade Styling) ---
 class GEO_Report(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 16)
         self.set_text_color(40, 40, 40)
-        self.cell(0, 10, "Limon Media: Professional GEO Strategy Report", ln=True, align="C")
+        self.cell(0, 10, "Limon Media: Professional GEO Strategy & Audit Report", ln=True, align="C")
         self.ln(10)
 
     def section_header(self, title):
@@ -65,7 +65,7 @@ def run_amazing_audit(url, niche):
         return {"error": str(e)}
 
 # --- UI SETUP ---
-st.set_page_config(page_title="Limon AI | GEO PRO", layout="wide")
+st.set_page_config(page_title="Limon AI | GEO PRO Auditor", layout="wide")
 
 st.markdown("""
     <style>
@@ -75,13 +75,12 @@ st.markdown("""
         background-color: #FFD700; color: black; font-weight: bold; 
         border: none; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
     }
-    .metric-card { background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; text-align: center; }
     .strategy-box { background-color: #ffffff; padding: 20px; border-left: 6px solid #FFD700; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍋 Limon Media: GEO Auditor PRO")
-st.sidebar.warning("🛠️ DEMO MODE ACTIVE")
+st.sidebar.warning("🛠️ DEMO MODE ACTIVE: License check bypassed for recording.")
 
 # --- INPUT SECTION ---
 col_a, col_b = st.columns([2, 1])
@@ -98,14 +97,14 @@ if st.button("Generate Professional Audit & Implementation Plan"):
             if "error" in data:
                 st.error(f"Error: {data['error']}")
             else:
-                # 1. Dashboard Metrics with Definitions
+                # 1. Dashboard Metrics with Tooltip Definitions
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("GEO Readiness", f"{data['score']}/100", help="Measures how easily AI models can parse and cite your content.")
+                    st.metric("GEO Readiness", f"{data['score']}/100", help="Measures how easily AI models like Gemini can parse and cite your content.")
                 with col2:
-                    st.metric("Entity Density", "High", help="How well your site connects concepts to your specific niche for AI understanding.")
+                    st.metric("Entity Density", "High", help="Measures how well your site connects concepts to your specific niche for AI understanding.")
                 with col3:
-                    st.metric("Status", "Optimized", help="Overall health of your technical Schema and AI visibility.")
+                    st.metric("Status", "Optimized", help="Overall health indicator of your technical Schema and AI-search visibility.")
 
                 st.divider()
 
@@ -116,33 +115,33 @@ if st.button("Generate Professional Audit & Implementation Plan"):
                     st.subheader("AI Content Roadmap")
                     st.markdown(f'<div class="strategy-box">{data["ai_strategy"]}</div>', unsafe_allow_html=True)
                     st.write("\n")
-                    st.caption("Tip: Use these sentence structures in your 'About' and 'Services' sections.")
+                    st.caption("Tip: Use these sentence structures in your 'About' and 'Services' sections for maximum AI visibility.")
 
                 with tab2:
                     st.subheader("Ready-to-Paste JSON-LD Schema")
-                    st.write("Deploy this code block to your site's `<head>` to standardize your data for Generative Engines.")
+                    st.write("Deploy this technical code block to your site's `<head>` to standardize your data for Generative Search Engines.")
                     st.code(data["schema_output"], language="json")
 
                 with tab3:
                     st.subheader("Industry Benchmark Analysis")
                     st.info(data["market_benchmark"])
 
-                # 3. PDF Logic Fixed for fpdf2
+                # 3. PDF Generation Fixed for fpdf2
                 pdf = GEO_Report()
                 pdf.add_page()
-                pdf.section_header(f"Professional Audit for {url_input}")
-                pdf.write_text(f"Niche: {niche_input} | Score: {data['score']}/100")
+                pdf.section_header(f"Professional Strategy Report: {url_input}")
+                pdf.write_text(f"Niche: {niche_input} | Overall GEO Score: {data['score']}/100")
                 
                 pdf.section_header("AI Content Strategy")
                 pdf.write_text(data["ai_strategy"])
                 
-                pdf.section_header("Technical Implementation Code")
+                pdf.section_header("Technical Implementation Code (JSON-LD)")
                 pdf.write_text(data["schema_output"])
                 
                 pdf_bytes = pdf.output()
 
                 st.download_button(
-                    label="📥 Download Strategy Blueprint (PDF)",
+                    label="📥 Download Detailed Strategy PDF",
                     data=bytes(pdf_bytes),
                     file_name="Limon_Pro_Strategy.pdf",
                     mime="application/pdf"
