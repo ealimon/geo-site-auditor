@@ -9,31 +9,30 @@ import google.generativeai as genai
 def clean_text(text):
     return re.sub(r'[^\x00-\x7F]+', '', text)
 
-# --- PDF GENERATOR ---
-class GEO_Report(FPDF):
-    def header(self):
-        self.set_font("Helvetica", "B", 16)
-        self.cell(0, 10, "Limon Media: GEO Strategy Report", ln=True, align="C")
-        self.ln(10)
-
-# --- CORE ENGINE ---
+# --- THE LIVE AI BRIDGE ---
 def run_amazing_audit(url, niche):
     try:
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
         page_text = soup.get_text()[:3000] 
 
-        # API Connection
+        # API Connection from Secrets
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # FORCED FIX: Using 'gemini-pro' as it has the widest legacy support for v1beta
-        model = genai.GenerativeModel('gemini-pro')
+        # AUTO-DETECTION: Find a model that works to bypass 404 errors
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        if not available_models:
+            return {"error": "No compatible models found for this API key."}
+        
+        # Pick the best available (prioritizing flash if it exists)
+        target_model = next((m for m in available_models if "flash" in m), available_models[0])
+        model = genai.GenerativeModel(target_model)
 
         prompt = f"Expert GEO Audit for {niche} website: {page_text}. Provide content gaps and schema."
         ai_response = model.generate_content(prompt)
         
-        return {"score": 92, "ai_strategy": ai_response.text}
+        return {"score": 92, "ai_strategy": ai_response.text, "model_used": target_model}
     except Exception as e:
         return {"error": str(e)}
 
@@ -50,18 +49,14 @@ if st.button("Generate Professional AI Audit"):
         if not url_input.startswith("http"):
             url_input = "https://" + url_input
             
-        with st.spinner("Connecting to Gemini Brain..."):
+        with st.spinner("Searching for available AI Brain..."):
             data = run_amazing_audit(url_input, niche_input)
             
             if "error" in data:
                 st.error(f"Technical Alert: {data['error']}")
             else:
-                st.success("Audit Complete!")
+                st.success(f"Audit Complete using {data['model_used']}!")
                 st.metric("GEO Readiness", f"{data['score']}/100")
                 st.write(data["ai_strategy"])
-                
-                pdf = GEO_Report()
-                pdf.add_page()
-                pdf.set_font("Helvetica", size=10)
-                pdf.multi_cell(0, 10, clean_text(data["ai_strategy"]))
-                st.download_button("Download Report", pdf.output(), "Report.pdf")
+    else:
+        st.warning("Please fill in both fields.")
