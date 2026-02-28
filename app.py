@@ -54,7 +54,7 @@ def run_amazing_audit(url, niche):
 
 # --- 4. INTERFACE & LOGIC GATE ---
 st.set_page_config(page_title="Limon AI | GEO PRO", layout="wide")
-st.title("🍋 Limon Media: GEO Auditor PRO")
+st.title("Limon Media: GEO Auditor PRO")
 
 # Sidebar License Check
 st.sidebar.header("Agency Authentication")
