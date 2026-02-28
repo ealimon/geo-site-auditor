@@ -8,7 +8,7 @@ import google.generativeai as genai
 def verify_license(license_key):
     """
     Validates the license key with Lemon Squeezy API.
-    Note: You must add your LEMON_SQUEEZY_API_KEY to Streamlit Secrets.
+    Requires LEMON_SQUEEZY_API_KEY in Streamlit Secrets.
     """
     url = "https://api.lemonsqueezy.com/v1/licenses/validate"
     headers = {
@@ -20,12 +20,11 @@ def verify_license(license_key):
     try:
         response = requests.post(url, headers=headers, data=data)
         result = response.json()
-        # Returns True if the key is valid and active
         return result.get("valid", False)
     except Exception:
         return False
 
-# --- 2. PDF & TEXT UTILITIES ---
+# --- 2. TEXT UTILITIES ---
 def clean_text(text):
     return re.sub(r'[^\x00-\x7F]+', '', text)
 
@@ -40,7 +39,7 @@ def run_amazing_audit(url, niche):
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # AUTO-DETECTION: Using Gemini 1.5 Flash for Agency-grade speed
+        # Using Gemini 1.5 Flash for Agency speed
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         target_model = next((m for m in available_models if "flash" in m), "models/gemini-1.5-flash")
         model = genai.GenerativeModel(target_model)
@@ -53,12 +52,12 @@ def run_amazing_audit(url, niche):
         return {"error": str(e)}
 
 # --- 4. INTERFACE & LOGIC GATE ---
-st.set_page_config(page_title="Limon AI | GEO PRO", layout="wide")
-st.title("Limon Media: GEO Auditor PRO")
+st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
+st.title("GEO Auditor PRO") # Updated Title per your request
 
 # Sidebar License Check
 st.sidebar.header("Agency Authentication")
-user_key = st.sidebar.text_input("Enter License Key", type="password", help="Issued after purchase at limon.media")
+user_key = st.sidebar.text_input("Enter License Key", type="password", help="Issued after purchase at your shop.")
 
 if user_key:
     if verify_license(user_key):
@@ -69,8 +68,8 @@ if user_key:
         col1, col2 = st.columns([1, 2])
         
         with col1:
-            url_input = st.text_input("Website URL", placeholder="https://www.limon.media/")
-            niche_input = st.text_input("Business Niche", placeholder="digital marketing")
+            url_input = st.text_input("Website URL", placeholder="https://www.yourclient.com/")
+            niche_input = st.text_input("Business Niche", placeholder="e.g., HVAC, Law Firm, SaaS")
             run_btn = st.button("Generate Professional AI Audit")
 
         if run_btn:
@@ -78,14 +77,14 @@ if user_key:
                 if not url_input.startswith("http"):
                     url_input = "https://" + url_input
                     
-                with st.spinner("Analyzing Site Architecture with Gemini 1.5 Flash..."):
+                with st.spinner("Analyzing with Gemini 1.5 Flash..."):
                     data = run_amazing_audit(url_input, niche_input)
                     
                     if "error" in data:
                         st.error(f"Technical Alert: {data['error']}")
                     else:
                         st.success(f"Audit Complete!")
-                        st.metric("GEO Readiness Score", f"{data['score']}/100")
+                        st.metric("GEO Readiness Score", f"{data['score']}/100") #
                         st.markdown("### AI Strategy & Implementation Roadmap")
                         st.write(data["ai_strategy"])
             else:
@@ -97,3 +96,12 @@ if user_key:
 else:
     st.info("🗝️ **License Required:** Please enter your 150-audit agency key in the sidebar to begin.")
     st.link_button("Get Your Agency License", "https://www.limon.media/shop")
+
+# --- 5. FOOTER ---
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center; color: grey; font-size: 0.8em;'>"
+    "Powered by Limon Media © 2026 | All Rights Reserved"
+    "</div>", 
+    unsafe_allow_html=True
+)
