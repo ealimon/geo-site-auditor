@@ -1,15 +1,35 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from fpdf import FPDF
 import re
 import google.generativeai as genai
 
-# --- PDF COMPATIBILITY ---
+# --- 1. LEMON SQUEEZY VALIDATION ---
+def verify_license(license_key):
+    """
+    Validates the license key with Lemon Squeezy API.
+    Note: You must add your LEMON_SQUEEZY_API_KEY to Streamlit Secrets.
+    """
+    url = "https://api.lemonsqueezy.com/v1/licenses/validate"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {st.secrets['LEMON_SQUEEZY_API_KEY']}"
+    }
+    data = {"license_key": license_key}
+    
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        result = response.json()
+        # Returns True if the key is valid and active
+        return result.get("valid", False)
+    except Exception:
+        return False
+
+# --- 2. PDF & TEXT UTILITIES ---
 def clean_text(text):
     return re.sub(r'[^\x00-\x7F]+', '', text)
 
-# --- THE LIVE AI BRIDGE ---
+# --- 3. THE LIVE AI BRIDGE ---
 def run_amazing_audit(url, niche):
     try:
         response = requests.get(url, timeout=10)
@@ -20,13 +40,9 @@ def run_amazing_audit(url, niche):
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
         
-        # AUTO-DETECTION: Find a model that works to bypass 404 errors
+        # AUTO-DETECTION: Using Gemini 1.5 Flash for Agency-grade speed
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        if not available_models:
-            return {"error": "No compatible models found for this API key."}
-        
-        # Pick the best available (prioritizing flash if it exists)
-        target_model = next((m for m in available_models if "flash" in m), available_models[0])
+        target_model = next((m for m in available_models if "flash" in m), "models/gemini-1.5-flash")
         model = genai.GenerativeModel(target_model)
 
         prompt = f"Expert GEO Audit for {niche} website: {page_text}. Provide content gaps and schema."
@@ -36,27 +52,48 @@ def run_amazing_audit(url, niche):
     except Exception as e:
         return {"error": str(e)}
 
-# --- INTERFACE ---
-st.set_page_config(page_title="Limon AI | GEO PRO")
+# --- 4. INTERFACE & LOGIC GATE ---
+st.set_page_config(page_title="Limon AI | GEO PRO", layout="wide")
 st.title("🍋 Limon Media: GEO Auditor PRO")
-st.sidebar.info("🚀 PRO License: 150 Audits Remaining")
 
-url_input = st.text_input("Website URL", placeholder="https://www.limon.media/")
-niche_input = st.text_input("Business Niche", placeholder="digital marketing")
+# Sidebar License Check
+st.sidebar.header("Agency Authentication")
+user_key = st.sidebar.text_input("Enter License Key", type="password", help="Issued after purchase at limon.media")
 
-if st.button("Generate Professional AI Audit"):
-    if url_input and niche_input:
-        if not url_input.startswith("http"):
-            url_input = "https://" + url_input
-            
-        with st.spinner("Searching for available AI Brain..."):
-            data = run_amazing_audit(url_input, niche_input)
-            
-            if "error" in data:
-                st.error(f"Technical Alert: {data['error']}")
+if user_key:
+    if verify_license(user_key):
+        st.sidebar.success("✅ PRO License Active")
+        st.sidebar.info("🚀 150-Audit Agency License Loaded") #
+
+        # REVEAL AUDITOR UI
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            url_input = st.text_input("Website URL", placeholder="https://www.limon.media/")
+            niche_input = st.text_input("Business Niche", placeholder="digital marketing")
+            run_btn = st.button("Generate Professional AI Audit")
+
+        if run_btn:
+            if url_input and niche_input:
+                if not url_input.startswith("http"):
+                    url_input = "https://" + url_input
+                    
+                with st.spinner("Analyzing Site Architecture with Gemini 1.5 Flash..."):
+                    data = run_amazing_audit(url_input, niche_input)
+                    
+                    if "error" in data:
+                        st.error(f"Technical Alert: {data['error']}")
+                    else:
+                        st.success(f"Audit Complete!")
+                        st.metric("GEO Readiness Score", f"{data['score']}/100")
+                        st.markdown("### AI Strategy & Implementation Roadmap")
+                        st.write(data["ai_strategy"])
             else:
-                st.success(f"Audit Complete using {data['model_used']}!")
-                st.metric("GEO Readiness", f"{data['score']}/100")
-                st.write(data["ai_strategy"])
+                st.warning("Please fill in both fields.")
     else:
-        st.warning("Please fill in both fields.")
+        st.sidebar.error("❌ Invalid License Key")
+        st.warning("Please enter a valid PRO License Key to unlock the 150-audit suite.")
+        st.link_button("Buy License ($49)", "https://www.limon.media/shop") #
+else:
+    st.info("🗝️ **License Required:** Please enter your 150-audit agency key in the sidebar to begin.")
+    st.link_button("Get Your Agency License", "https://www.limon.media/shop")
