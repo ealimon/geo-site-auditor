@@ -1,107 +1,75 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
-import re
 import google.generativeai as genai
+import requests
 
-# --- 1. LEMON SQUEEZY VALIDATION ---
-def verify_license(license_key):
-    """
-    Validates the license key with Lemon Squeezy API.
-    Requires LEMON_SQUEEZY_API_KEY in Streamlit Secrets.
-    """
-    url = "https://api.lemonsqueezy.com/v1/licenses/validate"
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {st.secrets['LEMON_SQUEEZY_API_KEY']}"
-    }
-    data = {"license_key": license_key}
-    
+# 1. Setup Page Config & Branding
+st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
+st.title("GEO Auditor PRO")
+
+# 2. Authentication Logic (Lemon Squeezy)
+def verify_license(key):
     try:
-        response = requests.post(url, headers=headers, data=data)
-        result = response.json()
-        return result.get("valid", False)
-    except Exception:
+        # Pulls from your Streamlit Secrets
+        api_key = st.secrets["LEMON_SQUEEZY_API_KEY"]
+        headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/vnd.api+json"}
+        # Validates the key against Lemon Squeezy's database
+        response = requests.get(f"https://api.lemonsqueezy.com/v1/license-keys/validate?license_key={key}", headers=headers)
+        return response.json().get("valid", False)
+    except:
         return False
 
-# --- 2. TEXT UTILITIES ---
-def clean_text(text):
-    return re.sub(r'[^\x00-\x7F]+', '', text)
-
-# --- 3. THE LIVE AI BRIDGE ---
-def run_amazing_audit(url, niche):
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        page_text = soup.get_text()[:3000] 
-
-        # API Connection from Secrets
-        api_key = st.secrets["GOOGLE_API_KEY"]
-        genai.configure(api_key=api_key)
-        
-        # Using Gemini 1.5 Flash for Agency speed
-        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        target_model = next((m for m in available_models if "flash" in m), "models/gemini-1.5-flash")
-        model = genai.GenerativeModel(target_model)
-
-        prompt = f"Expert GEO Audit for {niche} website: {page_text}. Provide content gaps and schema."
-        ai_response = model.generate_content(prompt)
-        
-        return {"score": 92, "ai_strategy": ai_response.text, "model_used": target_model}
-    except Exception as e:
-        return {"error": str(e)}
-
-# --- 4. INTERFACE & LOGIC GATE ---
-st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
-st.title("GEO Auditor PRO") # Updated Title per your request
-
-# Sidebar License Check
-st.sidebar.header("Agency Authentication")
-user_key = st.sidebar.text_input("Enter License Key", type="password", help="Issued after purchase at your shop.")
-
-if user_key:
-    if verify_license(user_key):
-        st.sidebar.success("✅ PRO License Active")
-        st.sidebar.info("🚀 150-Audit Agency License Loaded") #
-
-        # REVEAL AUDITOR UI
-        col1, col2 = st.columns([1, 2])
-        
-        with col1:
-            url_input = st.text_input("Website URL", placeholder="https://www.yourclient.com/")
-            niche_input = st.text_input("Business Niche", placeholder="e.g., HVAC, Law Firm, SaaS")
-            run_btn = st.button("Generate Professional AI Audit")
-
-        if run_btn:
-            if url_input and niche_input:
-                if not url_input.startswith("http"):
-                    url_input = "https://" + url_input
-                    
-                with st.spinner("Analyzing with Gemini 1.5 Flash..."):
-                    data = run_amazing_audit(url_input, niche_input)
-                    
-                    if "error" in data:
-                        st.error(f"Technical Alert: {data['error']}")
-                    else:
-                        st.success(f"Audit Complete!")
-                        st.metric("GEO Readiness Score", f"{data['score']}/100") #
-                        st.markdown("### AI Strategy & Implementation Roadmap")
-                        st.write(data["ai_strategy"])
-            else:
-                st.warning("Please fill in both fields.")
+# Sidebar for License Entry
+with st.sidebar:
+    st.header("Agency Authentication")
+    user_key = st.text_input("Enter License Key", type="password")
+    
+    if user_key:
+        if verify_license(user_key):
+            st.success("PRO License Active") #
+            st.info("🚀 150-Audit Agency License Loaded") #
+            authenticated = True
+        else:
+            st.error("Invalid License Key")
+            authenticated = False
     else:
-        st.sidebar.error("❌ Invalid License Key")
-        st.warning("Please enter a valid PRO License Key to unlock the 150-audit suite.")
-        st.link_button("Buy License ($49)", "https://www.limon.media/shop") #
-else:
-    st.info("🗝️ **License Required:** Please enter your 150-audit agency key in the sidebar to begin.")
-    st.link_button("Get Your Agency License", "https://www.limon.media/shop")
+        st.warning("License Required: Please enter your key to begin.")
+        st.button("Get Your Agency License")
+        authenticated = False
 
-# --- 5. FOOTER ---
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: grey; font-size: 0.8em;'>"
-    "Powered by Limon Media © 2026 | All Rights Reserved"
-    "</div>", 
-    unsafe_allow_html=True
-)
+# 3. Main Audit Logic (Unlocked if Authenticated)
+if authenticated:
+    target_url = st.text_input("Website URL", placeholder="https://www.example.com") #
+    niche = st.text_input("Business Niche", placeholder="e.g., mortgage broker") #
+
+    if st.button("Generate Professional AI Audit"):
+        # Configure Gemini with safety bypass
+        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+        
+        # Safety Settings: Set to BLOCK_NONE to prevent 'Invalid operation' errors in professional niches
+        safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+        ]
+        
+        model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
+
+        with st.spinner("Searching for available AI Brain..."): #
+            try:
+                # Custom System Prompt for GEO Strategy
+                prompt = f"Perform a professional GEO Audit for {target_url} in the {niche} niche. Identify content gaps for AI search and provide JSON-LD schema recommendations."
+                response = model.generate_content(prompt)
+                
+                # Check if the response was blocked despite settings
+                if response.candidates[0].finish_reason != 1:
+                     st.markdown(response.text)
+                else:
+                     st.error("Technical Alert: The AI declined to answer this specific query due to its internal safety layers. Try rephrasing the niche.")
+                     
+            except Exception as e:
+                st.error(f"Technical Alert: {str(e)}") # Catches the 'Part' error
+
+# 4. Footer Branding
+st.divider()
+st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
