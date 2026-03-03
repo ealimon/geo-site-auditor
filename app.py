@@ -2,74 +2,101 @@ import streamlit as st
 import google.generativeai as genai
 import requests
 
-# 1. Setup Page Config & Branding
+# 1. Page Configuration
 st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
-st.title("GEO Auditor PRO")
+st.title("GEO Auditor PRO 🍋")
 
-# 2. Authentication Logic (Lemon Squeezy)
+# 2. Robust License Verification Function
 def verify_license(key):
+    """
+    Validates the license key via Lemon Squeezy POST request.
+    """
     try:
-        # Pulls from your Streamlit Secrets
+        # Pull the secret you renamed to LEMON_SQUEEZY_API_KEY
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"]
-        headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/vnd.api+json"}
-        # Validates the key against Lemon Squeezy's database
-        response = requests.get(f"https://api.lemonsqueezy.com/v1/license-keys/validate?license_key={key}", headers=headers)
-        return response.json().get("valid", False)
-    except:
+        
+        url = "https://api.lemonsqueezy.com/v1/license-keys/validate"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json"
+        }
+        # Lemon Squeezy prefers POST for validation to keep keys out of URL logs
+        data = {"license_key": key}
+        
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code == 200:
+            return response.json().get("valid", False)
+        else:
+            # This logs the error to your Streamlit Cloud logs for debugging
+            print(f"Lemon Squeezy API Error: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        print(f"Connection Error: {e}")
         return False
 
-# Sidebar for License Entry
+# 3. Sidebar Authentication Gate
 with st.sidebar:
     st.header("Agency Authentication")
-    user_key = st.text_input("Enter License Key", type="password")
+    user_key = st.text_input("Enter License Key", type="password", help="Enter your 150-audit license key")
     
+    authenticated = False
     if user_key:
         if verify_license(user_key):
-            st.success("PRO License Active") #
-            st.info("🚀 150-Audit Agency License Loaded") #
+            st.success("✅ PRO License Active")
+            st.info("🚀 150-Audit Agency License Loaded")
             authenticated = True
         else:
-            st.error("Invalid License Key")
-            authenticated = False
+            st.error("❌ Invalid License Key")
+            st.write("Check if you are in **Test Mode** or if the key has expired.")
     else:
-        st.warning("License Required: Please enter your key to begin.")
-        st.button("Get Your Agency License")
-        authenticated = False
+        st.warning("Locked: License Required")
 
-# 3. Main Audit Logic (Unlocked if Authenticated)
+# 4. Main Application Logic
 if authenticated:
-    target_url = st.text_input("Website URL", placeholder="https://www.example.com") #
-    niche = st.text_input("Business Niche", placeholder="e.g., mortgage broker") #
+    col1, col2 = st.columns(2)
+    with col1:
+        target_url = st.text_input("Website URL", placeholder="https://vanmarlending.com")
+    with col2:
+        niche = st.text_input("Business Niche", placeholder="e.g., Mortgage Broker")
 
     if st.button("Generate Professional AI Audit"):
-        # Configure Gemini with safety bypass
-        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-        
-        # Safety Settings: Set to BLOCK_NONE to prevent 'Invalid operation' errors in professional niches
-        safety_settings = [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-        ]
-        
-        model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
+        if not target_url or not niche:
+            st.warning("Please provide both a URL and a Niche.")
+        else:
+            # Initialize Gemini with Safety Bypass
+            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+            
+            # This prevents the 'Invalid operation' error in sensitive niches like finance
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
+            
+            model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
+            
+            with st.spinner("Analyzing Site for GEO Gaps..."):
+                try:
+                    prompt = (
+                        f"Act as a GEO (Generative Engine Optimization) expert. "
+                        f"Audit {target_url} for the '{niche}' niche. "
+                        f"1. Identify missing 'Atomic Answers' for AI search. "
+                        f"2. Suggest specific JSON-LD schema improvements. "
+                        f"3. Rank the site's AI-readiness from 1-10."
+                    )
+                    response = model.generate_content(prompt)
+                    
+                    # Display results
+                    st.divider()
+                    st.markdown(response.text)
+                    
+                except Exception as e:
+                    st.error(f"AI Generation Error: {str(e)}")
+                    st.info("Tip: If the error persists, try a different niche or check your Google API quota.")
 
-        with st.spinner("Searching for available AI Brain..."): #
-            try:
-                # Custom System Prompt for GEO Strategy
-                prompt = f"Perform a professional GEO Audit for {target_url} in the {niche} niche. Identify content gaps for AI search and provide JSON-LD schema recommendations."
-                response = model.generate_content(prompt)
-                
-                # Check if the response was blocked despite settings
-                if response.candidates[0].finish_reason != 1:
-                     st.markdown(response.text)
-                else:
-                     st.error("Technical Alert: The AI declined to answer this specific query due to its internal safety layers. Try rephrasing the niche.")
-                     
-            except Exception as e:
-                st.error(f"Technical Alert: {str(e)}") # Catches the 'Part' error
-
-# 4. Footer Branding
+# 5. Footer
 st.divider()
-st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
+st.caption("Powered by Limon Media © 2026 | Built for the Generative Search Era")
