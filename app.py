@@ -6,13 +6,12 @@ import requests
 st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
 st.title("GEO Auditor PRO")
 
-# 2. License Verification Logic
+# 2. License Verification Logic (The Original Working Method)
 def verify_license(key):
     try:
-        # Access the secret key from your Streamlit settings
+        # Accesses the secret name currently in your settings
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"]
         
-        # Original working GET request structure
         url = f"https://api.lemonsqueezy.com/v1/license-keys/validate?license_key={key}"
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -25,8 +24,7 @@ def verify_license(key):
             return response.json().get("valid", False)
         return False
     except Exception as e:
-        # This will show in your Streamlit logs if there's a connection error
-        print(f"System Error: {e}")
+        print(f"Auth System Error: {e}")
         return False
 
 # 3. Sidebar Authentication
@@ -44,19 +42,18 @@ with st.sidebar:
     else:
         st.warning("License Required")
 
-# 4. Main Application Logic
+# 4. Main Application
 if authenticated:
-    target_url = st.text_input("Website URL", placeholder="https://vanmarlending.com")
+    target_url = st.text_input("Website URL", placeholder="https://example.com")
     niche = st.text_input("Business Niche", placeholder="e.g., Mortgage Broker")
 
-    if st.button("Generate Professional AI Audit"):
+    if st.button("Generate AI Audit"):
         if not target_url or not niche:
-            st.warning("Please provide both a URL and a Niche.")
+            st.warning("Please enter both a URL and a Niche.")
         else:
-            # Initialize Gemini
             genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
             
-            # Safety settings to prevent audits from being blocked in professional niches
+            # Safety bypass to ensure audits aren't blocked for professional niches
             safety = [
                 {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
                 {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -65,20 +62,14 @@ if authenticated:
             
             model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety)
             
-            with st.spinner("Analyzing Site for GEO Gaps..."):
+            with st.spinner("Processing..."):
                 try:
-                    prompt = (
-                        f"Act as a GEO expert. Audit {target_url} for the '{niche}' niche. "
-                        f"1. Identify missing 'Atomic Answers' for AI search. "
-                        f"2. Suggest specific JSON-LD schema improvements. "
-                        f"3. Rank the site's AI-readiness from 1-10."
-                    )
+                    prompt = f"Perform a professional GEO audit for {target_url} in the {niche} niche."
                     response = model.generate_content(prompt)
                     st.divider()
                     st.markdown(response.text)
                 except Exception as e:
-                    st.error(f"AI Technical Alert: {e}")
+                    st.error(f"AI Error: {e}")
 
-# 5. Footer
 st.divider()
 st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
