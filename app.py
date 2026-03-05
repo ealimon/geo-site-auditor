@@ -7,13 +7,14 @@ from fpdf import FPDF
 st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
 st.title("GEO Auditor PRO")
 
-# 2. License Verification Logic (The working version!)
+# 2. Working License Verification (The one that finally worked!)
 def verify_license(license_key):
     try:
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"].strip().strip('"').strip("'")
         url = "https://api.lemonsqueezy.com/v1/licenses/validate"
         headers = {"Accept": "application/json", "Authorization": f"Bearer {api_key}"}
         payload = {"license_key": license_key}
+        # Use data= for form-encoded delivery
         response = requests.post(url, headers=headers, data=payload)
         if response.status_code == 200:
             return response.json().get("valid", False)
@@ -45,9 +46,11 @@ if authenticated:
             st.warning("Please fill in both fields.")
         else:
             try:
+                # Initialize Gemini
                 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
                 
-                # THE FIX: Updated model name format to 'gemini-1.5-flash'
+                # THE FIX: Use 'gemini-1.5-flash' without the /models/ prefix 
+                # to avoid the 404 error shown in your logs.
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 with st.spinner("Analyzing Professional Audit..."):
@@ -58,12 +61,13 @@ if authenticated:
                     st.divider()
                     st.markdown(response.text)
                     
-                    # PDF Export Logic
+                    # PDF Generation Logic
                     pdf = FPDF()
                     pdf.add_page()
                     pdf.set_font("Arial", size=12)
                     pdf.multi_cell(0, 10, f"GEO Audit for: {target_url}\nNiche: {niche}\n\n{response.text}")
                     
+                    # Provide Download Button
                     st.download_button(
                         label="Download Audit as PDF",
                         data=pdf.output(dest='S'),
@@ -71,7 +75,6 @@ if authenticated:
                         mime="application/pdf"
                     )
             except Exception as e:
-                # Provides a clearer error message if something fails
                 st.error(f"Audit Error: {str(e)}")
 
 st.divider()
