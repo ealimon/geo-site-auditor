@@ -2,12 +2,13 @@ import streamlit as st
 import google.generativeai as genai
 import requests
 from fpdf import FPDF
+import time
 
 # 1. Page Configuration
 st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
 st.title("GEO Auditor PRO")
 
-# 2. Working License Verification (Lemon Squeezy)
+# 2. License Verification Logic (Working!)
 def verify_license(license_key):
     try:
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"].strip().strip('"').strip("'")
@@ -19,27 +20,26 @@ def verify_license(license_key):
     except:
         return False
 
-# 3. NEW: Smart Model Selector (Prevents 404 Errors)
+# 3. Smart Model Selector (Finds Gemini 3 automatically)
 def get_best_model():
-    """Finds the most modern 'flash' model available on your API key."""
     try:
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-        # List all models that support generating content
         models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        
-        # Priority list: Look for newest models first (3.0 -> 2.5 -> 1.5)
         for preferred in ['gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']:
             for m in models:
-                if preferred in m:
-                    return m
-        return models[0] # Fallback to whatever is available
-    except Exception as e:
-        return "gemini-1.5-flash" # Hard fallback
+                if preferred in m: return m
+        return models[0]
+    except:
+        return "gemini-1.5-flash"
 
 # 4. Sidebar Authentication
 with st.sidebar:
     st.header("Agency Authentication")
     user_key = st.text_input("Enter License Key", type="password")
+    
+    # NEW: Your requested instruction
+    st.info("Check your email for your license key.")
+    
     authenticated = False
     if user_key:
         if verify_license(user_key):
@@ -53,20 +53,20 @@ with st.sidebar:
 # 5. Main Application Logic
 if authenticated:
     target_url = st.text_input("Website URL", placeholder="https://example.com")
-    niche = st.text_input("Business Niche", placeholder="e.g., Dentist in London")
+    niche = st.text_input("Business Niche", placeholder="e.g., HVAC Specialist")
 
     if st.button("Generate AI Audit"):
         if not target_url or not niche:
             st.warning("Please fill in both fields.")
         else:
             try:
-                # Dynamically get the model name
                 model_name = get_best_model()
                 model = genai.GenerativeModel(model_name)
                 
-                with st.spinner(f"Analyzing via {model_name}..."):
-                    prompt = f"Professional GEO audit for {target_url} in the {niche} niche. Focus on AI search visibility."
+                with st.spinner(f"AI is analyzing {target_url}..."):
+                    prompt = f"Perform a professional GEO audit for {target_url} in the {niche} niche. Detail AI search visibility."
                     response = model.generate_content(prompt)
+                    
                     st.divider()
                     st.markdown(response.text)
                     
@@ -77,8 +77,13 @@ if authenticated:
                     clean_text = response.text.replace("**", "").replace("#", "")
                     pdf.multi_cell(0, 10, f"GEO Audit: {target_url}\n\n{clean_text}")
                     st.download_button("Download PDF", pdf.output(dest='S'), f"Audit_{target_url}.pdf", "application/pdf")
+            
             except Exception as e:
-                st.error(f"Audit Error: {str(e)}")
+                if "429" in str(e):
+                    st.error("Speed Limit Reached. Please wait 60 seconds and try again.")
+                    st.info("The Free Tier has a limit on how many audits you can run per minute.")
+                else:
+                    st.error(f"Audit Error: {str(e)}")
 
 st.divider()
 st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
