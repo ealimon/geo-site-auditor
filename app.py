@@ -55,7 +55,7 @@ with st.sidebar:
                    "https://1drv.ms/b/c/3fd2980a3a6fe39a/IQAILxFib3OSTZX_e7ANHIEmAdG30azae0sUBJx28BYPwN8?e=UHE2Er")
     
     st.divider()
-    st.caption("Support: support@limon.media")
+    st.caption("Support: info@limon.media")
 
 # 5. Main Application (Unlocked after License Check)
 if authenticated:
