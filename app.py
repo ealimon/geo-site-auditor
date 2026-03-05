@@ -1,93 +1,78 @@
 import streamlit as st
 import google.generativeai as genai
 import requests
+from fpdf import FPDF
 
 # 1. Page Configuration
 st.set_page_config(page_title="GEO Auditor PRO", layout="wide")
 st.title("GEO Auditor PRO")
 
-# 2. THE FIX: Official Lemon Squeezy License API Logic
+# 2. License Verification Logic (The working version!)
 def verify_license(license_key):
-    """
-    Validates the license key using the specific /licenses/validate endpoint.
-    Uses form-encoded data (data=) instead of JSON for maximum reliability.
-    """
     try:
-        # Get and clean the API key from Secrets
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"].strip().strip('"').strip("'")
-        
-        # CORRECT URL: Dedicated validation endpoint
         url = "https://api.lemonsqueezy.com/v1/licenses/validate"
-        
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
-        
-        # CORRECT FORMAT: Form-encoded payload
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {api_key}"}
         payload = {"license_key": license_key}
-        
-        # CRITICAL: Use data=payload (form-encoded)
         response = requests.post(url, headers=headers, data=payload)
-        
         if response.status_code == 200:
-            data = response.json()
-            return data.get("valid", False)
-        
-        # Logs the specific error code to Streamlit Logs for debugging
-        print(f"License API Error: {response.status_code} - {response.text}")
+            return response.json().get("valid", False)
         return False
-        
-    except Exception as e:
-        print(f"System Auth Error: {e}")
+    except:
         return False
 
 # 3. Sidebar Authentication
 with st.sidebar:
     st.header("Agency Authentication")
     user_key = st.text_input("Enter License Key", type="password")
-    
     authenticated = False
     if user_key:
-        with st.spinner("Verifying with Live Database..."):
-            if verify_license(user_key):
-                st.success("PRO License Active")
-                authenticated = True
-            else:
-                st.error("Invalid License Key")
-                st.info("Note: Use a LIVE key if your store is active.")
+        if verify_license(user_key):
+            st.success("PRO License Active")
+            authenticated = True
+        else:
+            st.error("Invalid License Key")
     else:
         st.warning("License Required")
 
-# 4. Main Application (Runs only after successful login)
+# 4. Main Application Logic
 if authenticated:
-    target_url = st.text_input("Website URL", placeholder="https://example.com")
-    niche = st.text_input("Business Niche", placeholder="e.g., HVAC in Austin")
+    target_url = st.text_input("Website URL", placeholder="https://limon.media")
+    niche = st.text_input("Business Niche", placeholder="e.g., Digital Marketing")
 
     if st.button("Generate AI Audit"):
         if not target_url or not niche:
-            st.warning("Please provide both a URL and a Niche.")
+            st.warning("Please fill in both fields.")
         else:
-            # Initialize Google AI
-            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-            
-            # Professional safety settings for business audits
-            safety = [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
-            
-            model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety)
-            
-            with st.spinner("Analyzing Professional Audit..."):
-                try:
-                    prompt = f"Perform a professional GEO audit for {target_url} in the {niche} niche."
+            try:
+                genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+                
+                # THE FIX: Updated model name format to 'gemini-1.5-flash'
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                with st.spinner("Analyzing Professional Audit..."):
+                    prompt = f"Perform a professional GEO (Generative Engine Optimization) audit for {target_url} in the {niche} niche. Focus on AI search visibility."
                     response = model.generate_content(prompt)
+                    
+                    # Display Result
                     st.divider()
                     st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"AI Error: {e}")
+                    
+                    # PDF Export Logic
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_font("Arial", size=12)
+                    pdf.multi_cell(0, 10, f"GEO Audit for: {target_url}\nNiche: {niche}\n\n{response.text}")
+                    
+                    st.download_button(
+                        label="Download Audit as PDF",
+                        data=pdf.output(dest='S'),
+                        file_name=f"GEO_Audit_{target_url}.pdf",
+                        mime="application/pdf"
+                    )
+            except Exception as e:
+                # Provides a clearer error message if something fails
+                st.error(f"Audit Error: {str(e)}")
 
 st.divider()
 st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
