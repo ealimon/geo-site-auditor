@@ -14,7 +14,7 @@ def verify_license(license_key):
         url = "https://api.lemonsqueezy.com/v1/licenses/validate"
         headers = {"Accept": "application/json", "Authorization": f"Bearer {api_key}"}
         payload = {"license_key": license_key}
-        # Correctly using form-encoded data
+        # Correctly using form-encoded data (data=)
         response = requests.post(url, headers=headers, data=payload)
         if response.status_code == 200:
             return response.json().get("valid", False)
@@ -49,12 +49,12 @@ if authenticated:
                 # Initialize Gemini
                 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
                 
-                # THE FINAL FIX: Use just the model name 'gemini-1.5-flash'
-                # Removing 'models/' prevents the 404 error shown in your logs.
+                # THE FINAL FIX: We use 'gemini-1.5-flash' directly.
+                # This bypasses the 'models/' pathing error from your logs.
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 with st.spinner("Analyzing Professional Audit..."):
-                    prompt = f"Perform a professional GEO (Generative Engine Optimization) audit for {target_url} in the {niche} niche. Focus on how AI search engines like Gemini and Perplexity see this site."
+                    prompt = f"Perform a professional GEO (Generative Engine Optimization) audit for {target_url} in the {niche} niche. Analyze visibility for AI search engines."
                     response = model.generate_content(prompt)
                     
                     # Display Result
@@ -65,7 +65,7 @@ if authenticated:
                     pdf = FPDF()
                     pdf.add_page()
                     pdf.set_font("Arial", size=12)
-                    # Simple markdown cleanup for basic PDF generation
+                    # Simple markdown cleanup for basic PDF compatibility
                     clean_text = response.text.replace("**", "").replace("#", "")
                     pdf.multi_cell(0, 10, f"GEO Audit for: {target_url}\nNiche: {niche}\n\n{clean_text}")
                     
@@ -76,6 +76,7 @@ if authenticated:
                         mime="application/pdf"
                     )
             except Exception as e:
+                # This gives us a specific error if the API refuses the request
                 st.error(f"Audit Error: {str(e)}")
 
 st.divider()
