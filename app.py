@@ -8,31 +8,33 @@ st.title("GEO Auditor PRO")
 
 # 2. THE FIX: Official Lemon Squeezy License API Logic
 def verify_license(license_key):
+    """
+    Validates the license key using the specific /licenses/validate endpoint.
+    Uses form-encoded data (data=) instead of JSON for maximum reliability.
+    """
     try:
         # Get and clean the API key from Secrets
         api_key = st.secrets["LEMON_SQUEEZY_API_KEY"].strip().strip('"').strip("'")
         
-        # URL for the LICENSE API (not the general store API)
-        url = "https://api.lemonsqueezy.com/v1/license-keys/validate"
+        # CORRECT URL: Dedicated validation endpoint
+        url = "https://api.lemonsqueezy.com/v1/licenses/validate"
         
-        # REQUIRED HEADERS for the License API
         headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {api_key}"
         }
         
-        # THE CRITICAL CHANGE: License API expects form data, not JSON
+        # CORRECT FORMAT: Form-encoded payload
         payload = {"license_key": license_key}
         
-        # Send as data=payload (form-encoded) instead of json=payload
+        # CRITICAL: Use data=payload (form-encoded)
         response = requests.post(url, headers=headers, data=payload)
         
         if response.status_code == 200:
             data = response.json()
-            # Returns True if 'valid' is true in the response body
             return data.get("valid", False)
         
-        # Logs the specific error code (e.g., 401, 422) to Streamlit Logs
+        # Logs the specific error code to Streamlit Logs for debugging
         print(f"License API Error: {response.status_code} - {response.text}")
         return False
         
@@ -47,35 +49,45 @@ with st.sidebar:
     
     authenticated = False
     if user_key:
-        with st.spinner("Checking Live Database..."):
+        with st.spinner("Verifying with Live Database..."):
             if verify_license(user_key):
                 st.success("PRO License Active")
                 authenticated = True
             else:
                 st.error("Invalid License Key")
-                st.info("Ensure you are using a LIVE key (not a test key).")
+                st.info("Note: Use a LIVE key if your store is active.")
     else:
         st.warning("License Required")
 
-# 4. Main Application
+# 4. Main Application (Runs only after successful login)
 if authenticated:
     target_url = st.text_input("Website URL", placeholder="https://example.com")
-    niche = st.text_input("Business Niche", placeholder="e.g., Dentist in London")
+    niche = st.text_input("Business Niche", placeholder="e.g., HVAC in Austin")
 
     if st.button("Generate AI Audit"):
         if not target_url or not niche:
-            st.warning("Please fill in both fields.")
+            st.warning("Please provide both a URL and a Niche.")
         else:
+            # Initialize Google AI
             genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            with st.spinner("Analyzing..."):
+            # Professional safety settings for business audits
+            safety = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
+            
+            model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety)
+            
+            with st.spinner("Analyzing Professional Audit..."):
                 try:
                     prompt = f"Perform a professional GEO audit for {target_url} in the {niche} niche."
                     response = model.generate_content(prompt)
+                    st.divider()
                     st.markdown(response.text)
                 except Exception as e:
                     st.error(f"AI Error: {e}")
 
 st.divider()
-st.caption("Powered by Limon Media © 2026")
+st.caption("Powered by Limon Media © 2026 | All Rights Reserved")
