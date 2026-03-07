@@ -45,7 +45,7 @@ with st.sidebar:
     st.divider()
     
     st.markdown("### 🛠️ More Tools")
-    st.info("**Coming Soon:** AI Content Sentiment Scorer")
+    st.info("**Coming Soon:**")
     st.write("🧪 *Internal Beta:* Local Maps LLM Optimizer")
     
     st.divider()
