@@ -27,22 +27,22 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. CORE LOGIC: THE UNIVERSAL ENGINE
+# 2. CORE ENGINE: UNIVERSAL STABILITY
 def run_geo_audit(url, niche):
     try:
-        # Link to your Secrets
+        # Connects to your Streamlit Secrets
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
         
-        # Use the base 'gemini-1.5-flash' name to avoid 404/Not Found errors
+        # Using the base 'gemini-1.5-flash' name to prevent 404/Connection errors
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = (
             f"You are a Senior GEO Strategist. Perform an audit for: {url} in the {niche} niche. "
             "\n\nFormat your response as follows:"
-            "\n1. **AI Sentiment Analysis** (Brand perception by LLMs)"
-            "\n2. **Information Density** (Technical scannability for AI)"
-            "\n3. **Citation Potential** (Likelihood of being sourced)"
-            "\n4. **Top 3 Action Items** to improve visibility."
+            "\n1. **AI Sentiment Analysis** (How LLMs perceive this brand)"
+            "\n2. **Information Density** (Technical scannability for AI agents)"
+            "\n3. **Citation Potential** (Likelihood of being sourced in AI answers)"
+            "\n4. **Top 3 Action Items** to immediately improve AI search visibility."
         )
         
         response = model.generate_content(prompt)
@@ -50,10 +50,17 @@ def run_geo_audit(url, niche):
     except Exception as e:
         return str(e)
 
-# 3. SIDEBAR: CLEAN & PROFESSIONAL
+# 3. SIDEBAR: BETA BRANDING
 with st.sidebar:
     st.title("🍋 Limon Labs")
-    st.write("Specialized AI tools for the modern search landscape.")
+    st.write("**GEO Auditor PRO** (Beta Access)")
+    st.caption("Specialized AI tools for the generative search era.")
+    
+    st.divider()
+    
+    st.markdown("#### **Beta Support**")
+    st.write("Found a bug or have a feature request?")
+    st.link_button("📩 Send Feedback", "mailto:info@limon.media")
     
     st.divider()
     
@@ -62,7 +69,7 @@ with st.sidebar:
     st.link_button("📅 Book a Strategy Call", "https://www.limon.media/contact")
     
     st.divider()
-    st.caption("© 2026 Limon Media | info@limon.media")
+    st.caption("© 2026 Limon Media")
 
 # 4. MAIN INTERFACE
 st.title("GEO Auditor PRO")
@@ -83,20 +90,21 @@ if st.button("🚀 Run AI GEO Audit"):
         with st.spinner("Analyzing digital footprint..."):
             result = run_geo_audit(target_url, niche)
             
-            # Smart Error Handling for the User
+            # Friendly Error Handling for "Beta" users
             if "429" in result:
                 st.error("🍋 **System Busy.** Google's free tier is temporarily full. Please wait 60 seconds and try again.")
-            elif "404" in result:
-                st.error("🍋 **Connection Error.** Please refresh the page and try again.")
+            elif "404" in result or "not found" in result.lower():
+                st.error("🍋 **Connection Error.** Please refresh the page to reconnect to the AI engine.")
             elif "API_KEY_INVALID" in result:
-                st.error("🍋 **Invalid API Key.** Please check your Streamlit Secrets.")
+                st.error("🍋 **Key Error.** Please check your Streamlit Secrets configuration.")
             else:
                 st.success("Audit Complete!")
                 st.markdown(result)
                 st.divider()
+                st.balloons()
                 st.markdown("### 🍋 Want to dominate AI Search?")
                 st.link_button("Contact Limon Media", "https://www.limon.media/contact")
 
 # 5. FOOTER
 st.divider()
-st.caption("Limon Media GEO Auditor PRO v1.0 | Stable Build")
+st.caption("Limon Media GEO Auditor PRO v1.0 | Stable Beta Build")
