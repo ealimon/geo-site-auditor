@@ -46,8 +46,7 @@ with st.sidebar:
     
     st.markdown("### 🛠️ More Tools")
     st.info("**Coming Soon:**")
-    st.write("🧪 *Internal Beta:* Local Maps LLM Optimizer")
-    
+        
     st.divider()
     
     st.markdown("#### **Need an Expert?**")
