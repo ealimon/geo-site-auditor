@@ -20,6 +20,10 @@ st.markdown("""
         padding: 0.5rem 2rem;
         font-weight: bold;
     }
+    .stButton>button:hover {
+        background-color: #e6c200;
+        color: black;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -29,7 +33,7 @@ def run_geo_audit(url, niche):
         # Configure the API with your Secret Key
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
         
-        # Using the exact stable model name to avoid 404/429 errors
+        # Using the stable model to ensure consistent results on Free Tier
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         prompt = (
@@ -46,15 +50,20 @@ def run_geo_audit(url, niche):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# 3. SIDEBAR
+# 3. SIDEBAR: BRANDING ONLY
 with st.sidebar:
     st.title("🍋 Limon Labs")
+    st.write("Specialized AI tools for the modern search landscape.")
+    
     st.divider()
-    st.markdown("### 🛠️ More Tools")
-    st.write("🧪 *Internal Beta:* Local Maps LLM Optimizer")
-    st.divider()
+    
+    # THE AGENCY UPSELL
     st.markdown("#### **Need an Expert?**")
+    st.write("Full-service GEO implementation for high-growth brands.")
     st.link_button("📅 Book a Strategy Call", "https://www.limon.media/contact")
+    
+    st.divider()
+    st.caption("© 2026 Limon Media | info@limon.media")
 
 # 4. MAIN INTERFACE
 st.title("GEO Auditor PRO")
@@ -77,17 +86,12 @@ if st.button("🚀 Run AI GEO Audit"):
             
             if "Error:" in result:
                 if "429" in result:
-                    st.error("🍋 **Quota Squeezed!** Google's free tier is busy. Please wait 60 seconds and try again.")
+                    st.error("🍋 **System Busy.** Please wait 60 seconds and try again.")
                 else:
                     st.error(result)
             else:
                 st.success("Audit Complete!")
                 st.markdown(result)
                 st.divider()
-                # FIXED: Added missing closing parenthesis and quote below
                 st.markdown("### 🍋 Want to dominate AI Search?")
                 st.link_button("Contact Limon Media", "https://www.limon.media/contact")
-
-# 5. FOOTER
-st.divider()
-st.caption("Limon Media GEO Auditor PRO v1.0 | Stable Build")
