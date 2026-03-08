@@ -27,14 +27,15 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. CORE ENGINE: UNIVERSAL STABILITY
+# 2. CORE ENGINE: UPDATED FOR MARCH 2026 STABILITY
 def run_geo_audit(url, niche):
     try:
         # Connects to your Streamlit Secrets
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
         
-        # Using the base 'gemini-1.5-flash' name to prevent 404/Connection errors
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # USE GEMINI 3.1: This is the new stable standard as of March 2026.
+        # It replaces the deprecated gemini-1.5-flash.
+        model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
         
         prompt = (
             f"You are a Senior GEO Strategist. Perform an audit for: {url} in the {niche} niche. "
@@ -60,7 +61,8 @@ with st.sidebar:
     
     st.markdown("#### **Beta Support**")
     st.write("Found a bug or have a feature request?")
-    st.link_button("📩 Send Feedback", "mailto:info@limon.media")
+    # Updated with the automated subject line we discussed
+    st.link_button("📩 Send Feedback", "mailto:info@limon.media?subject=GEO%20Auditor%20Beta%20Feedback")
     
     st.divider()
     
@@ -90,13 +92,13 @@ if st.button("🚀 Run AI GEO Audit"):
         with st.spinner("Analyzing digital footprint..."):
             result = run_geo_audit(target_url, niche)
             
-            # Friendly Error Handling for "Beta" users
+            # Smart Error Handling for the new Gemini 3 service
             if "429" in result:
-                st.error("🍋 **System Busy.** Google's free tier is temporarily full. Please wait 60 seconds and try again.")
+                st.error("🍋 **System Busy.** Google's free tier is temporarily full. Please wait 60 seconds.")
             elif "404" in result or "not found" in result.lower():
-                st.error("🍋 **Connection Error.** Please refresh the page to reconnect to the AI engine.")
+                st.error("🍋 **Service Migration.** Google is updating its AI servers. Please refresh in a moment.")
             elif "API_KEY_INVALID" in result:
-                st.error("🍋 **Key Error.** Please check your Streamlit Secrets configuration.")
+                st.error("🍋 **Key Error.** Please check your Streamlit Secrets.")
             else:
                 st.success("Audit Complete!")
                 st.markdown(result)
@@ -107,4 +109,4 @@ if st.button("🚀 Run AI GEO Audit"):
 
 # 5. FOOTER
 st.divider()
-st.caption("Limon Media GEO Auditor PRO v1.0 | Stable Beta Build")
+st.caption("Limon Media GEO Auditor PRO v1.1 | Stable Beta Build (Gemini 3.1)")
